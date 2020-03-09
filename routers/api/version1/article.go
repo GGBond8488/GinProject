@@ -3,12 +3,13 @@ package version1
 import (
 	"My-gin-Project/models"
 	"My-gin-Project/pkg/e"
+	"My-gin-Project/pkg/logging"
 	"My-gin-Project/pkg/setting"
 	"My-gin-Project/pkg/util"
 	"github.com/astaxie/beego/validation"
 	"github.com/gin-gonic/gin"
 	"github.com/unknwon/com"
-	"log"
+
 	"net/http"
 )
 
@@ -17,27 +18,27 @@ func GetArticle(c *gin.Context) {
 	id := com.StrTo(c.Param("id")).MustInt()
 
 	valid := validation.Validation{}
-	valid.Min(id,1,"id").Message("ID必须大于0")
+	valid.Min(id, 1, "id").Message("ID必须大于0")
 	code := e.INVALID_PARAMS
 	var data interface{}
 
-	if !valid.HasErrors(){
-		if models.ExistArticleByID(id){
+	if !valid.HasErrors() {
+		if models.ExistArticleByID(id) {
 			data = models.GetArticle(id)
 			code = e.SUCCESS
-		}else {
+		} else {
 			code = e.ERROR_NOT_EXIST_ARTICLE
 		}
-	}else {
-		for _,err :=range valid.Errors{
-			log.Printf("err.key:%s,err.message:%s",err.Key,err.Message)
+	} else {
+		for _, err := range valid.Errors {
+			logging.Info("err.key:%s,err.message:%s", err.Key, err.Message)
 		}
 	}
 
-	c.JSON(http.StatusOK,gin.H{
-		"code":code,
-		"msg":e.GetMsg(code),
-		"data":data,
+	c.JSON(http.StatusOK, gin.H{
+		"code": code,
+		"msg":  e.GetMsg(code),
+		"data": data,
 	})
 }
 
@@ -64,7 +65,7 @@ func GetArticles(c *gin.Context) {
 	}
 
 	code := e.INVALID_PARAMS
-	if ! valid.HasErrors() {
+	if !valid.HasErrors() {
 		code = e.SUCCESS
 
 		data["lists"] = models.GetArticles(util.GetPage(c), setting.PageSize, maps)
@@ -72,14 +73,14 @@ func GetArticles(c *gin.Context) {
 
 	} else {
 		for _, err := range valid.Errors {
-			log.Printf("err.key: %s, err.message: %s", err.Key, err.Message)
+			logging.Info("err.key: %s, err.message: %s", err.Key, err.Message)
 		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"code" : code,
-		"msg" : e.GetMsg(code),
-		"data" : data,
+		"code": code,
+		"msg":  e.GetMsg(code),
+		"data": data,
 	})
 }
 
@@ -101,9 +102,9 @@ func AddArticle(c *gin.Context) {
 	valid.Range(state, 0, 1, "state").Message("状态只允许0或1")
 
 	code := e.INVALID_PARAMS
-	if ! valid.HasErrors() {
+	if !valid.HasErrors() {
 		if models.ExistTagByID(tagId) {
-			data := make(map[string]interface {})
+			data := make(map[string]interface{})
 			data["tag_id"] = tagId
 			data["title"] = title
 			data["desc"] = desc
@@ -118,14 +119,14 @@ func AddArticle(c *gin.Context) {
 		}
 	} else {
 		for _, err := range valid.Errors {
-			log.Printf("err.key: %s, err.message: %s", err.Key, err.Message)
+			logging.Info("err.key: %s, err.message: %s", err.Key, err.Message)
 		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"code" : code,
-		"msg" : e.GetMsg(code),
-		"data" : make(map[string]interface{}),
+		"code": code,
+		"msg":  e.GetMsg(code),
+		"data": make(map[string]interface{}),
 	})
 }
 
@@ -154,10 +155,10 @@ func EditArticle(c *gin.Context) {
 	valid.MaxSize(modifiedBy, 100, "modified_by").Message("修改人最长为100字符")
 
 	code := e.INVALID_PARAMS
-	if ! valid.HasErrors() {
+	if !valid.HasErrors() {
 		if models.ExistArticleByID(id) {
 			if models.ExistTagByID(tagId) {
-				data := make(map[string]interface {})
+				data := make(map[string]interface{})
 				if tagId > 0 {
 					data["tag_id"] = tagId
 				}
@@ -183,14 +184,14 @@ func EditArticle(c *gin.Context) {
 		}
 	} else {
 		for _, err := range valid.Errors {
-			log.Printf("err.key: %s, err.message: %s", err.Key, err.Message)
+			logging.Info("err.key: %s, err.message: %s", err.Key, err.Message)
 		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"code" : code,
-		"msg" : e.GetMsg(code),
-		"data" : make(map[string]string),
+		"code": code,
+		"msg":  e.GetMsg(code),
+		"data": make(map[string]string),
 	})
 }
 
@@ -202,7 +203,7 @@ func DeleteArticle(c *gin.Context) {
 	valid.Min(id, 1, "id").Message("ID必须大于0")
 
 	code := e.INVALID_PARAMS
-	if ! valid.HasErrors() {
+	if !valid.HasErrors() {
 		if models.ExistArticleByID(id) {
 			models.DeleteArticle(id)
 			code = e.SUCCESS
@@ -211,13 +212,13 @@ func DeleteArticle(c *gin.Context) {
 		}
 	} else {
 		for _, err := range valid.Errors {
-			log.Printf("err.key: %s, err.message: %s", err.Key, err.Message)
+			logging.Info("err.key: %s, err.message: %s", err.Key, err.Message)
 		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"code" : code,
-		"msg" : e.GetMsg(code),
-		"data" : make(map[string]string),
+		"code": code,
+		"msg":  e.GetMsg(code),
+		"data": make(map[string]string),
 	})
 }
