@@ -14,13 +14,18 @@ import (
 //获取多个文章标签
 //c *gin.Context是Gin很重要的组成部分，可以理解为上下文，
 //它允许我们在中间件之间传递变量、管理流、验证请求的JSON和呈现JSON响应
+
+
+
 func GetTags(c *gin.Context)  {
 	//c.Query可用于获取?name=test&state=1这类URL参数，
 	//而c.DefaultQuery则支持设置一个默认值
  	name := c.Query("name")
-
+	var ok1,ok2 bool
  	maps := make(map[string]interface{})
  	data := make(map[string]interface{})
+
+ 	maps["delete_on"] = 0
 
  	if name!=""{
  		maps["name"] = name
@@ -31,11 +36,12 @@ func GetTags(c *gin.Context)  {
 		maps["state"] = state
 	}
 
-	code := e.SUCCESS
-
-	data["lists"] = models.GetTags(util.GetPage(c),setting.PageSize,maps)
-	data["total"] = models.GetTagTotal(maps)
-
+	code := e.ERROR_DATABASE_EXCEPTION
+	data["lists"],ok1 = models.GetTags(util.GetPage(c),setting.PageSize,maps)
+	data["total"],ok2 = models.GetTagTotal(maps)
+	if ok1&&ok2{
+		code = e.SUCCESS
+	}
 	c.JSON(http.StatusOK,gin.H{
 		"code" 	:code,
 		"msg"	:e.GetMsg(code),
@@ -44,6 +50,8 @@ func GetTags(c *gin.Context)  {
 }
 
 //新增文章标签
+
+
 func AddTag(c *gin.Context) {
 	name := c.Query("name")
 	state := com.StrTo(c.DefaultQuery("state", "0")).MustInt()
@@ -59,9 +67,8 @@ func AddTag(c *gin.Context) {
 	code := e.INVALID_PARAMS
 
 	if ! valid.HasErrors() {
-		if ! models.ExistTagByName(name) {
+		if ! models.ExistTagByName(name)&&models.AddTag(name, state, createdBy) {
 			code = e.SUCCESS
-			models.AddTag(name, state, createdBy)
 		} else {
 			code = e.ERROR_EXIST_TAG
 		}
@@ -75,6 +82,7 @@ func AddTag(c *gin.Context) {
 }
 
 //修改文章标签
+
 func EditTag(c *gin.Context) {
 	id := com.StrTo(c.Param("id")).MustInt()
 	name := c.Query("name")
@@ -105,8 +113,9 @@ func EditTag(c *gin.Context) {
 			if state != -1 {
 				data["state"] = state
 			}
-
-			models.EditTag(id, data)
+			if !models.EditTag(id, data){
+				code = e.ERROR_NOT_EXIST_TAG
+			}
 		} else {
 			code = e.ERROR_NOT_EXIST_TAG
 		}
@@ -120,6 +129,8 @@ func EditTag(c *gin.Context) {
 }
 
 //删除文章标签
+
+
 func DeleteTag(c *gin.Context) {
 	id := com.StrTo(c.Param("id")).MustInt()
 
@@ -129,8 +140,8 @@ func DeleteTag(c *gin.Context) {
 	code := e.INVALID_PARAMS
 	if ! valid.HasErrors() {
 		code = e.SUCCESS
-		if models.ExistTagByID(id) {
-			models.DeleteTag(id)
+		if models.ExistTagByID(id)&&models.DeleteTag(id) {
+
 		} else {
 			code = e.ERROR_NOT_EXIST_TAG
 		}

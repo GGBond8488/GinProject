@@ -21,11 +21,15 @@ func GetArticle(c *gin.Context) {
 	valid.Min(id, 1, "id").Message("ID必须大于0")
 	code := e.INVALID_PARAMS
 	var data interface{}
-
+	var ok  bool
 	if !valid.HasErrors() {
 		if models.ExistArticleByID(id) {
-			data = models.GetArticle(id)
-			code = e.SUCCESS
+			data,ok = models.GetArticle(id)
+			if ok {
+				code = e.SUCCESS
+			}else {
+				code = e.ERROR_DATABASE_EXCEPTION
+			}
 		} else {
 			code = e.ERROR_NOT_EXIST_ARTICLE
 		}
@@ -43,11 +47,14 @@ func GetArticle(c *gin.Context) {
 }
 
 //获取多个文章
+
+
 func GetArticles(c *gin.Context) {
 	data := make(map[string]interface{})
 	maps := make(map[string]interface{})
+	maps["delete_on"] = 0
 	valid := validation.Validation{}
-
+	var ok bool
 	var state int = -1
 	if arg := c.Query("state"); arg != "" {
 		state = com.StrTo(arg).MustInt()
@@ -66,10 +73,16 @@ func GetArticles(c *gin.Context) {
 
 	code := e.INVALID_PARAMS
 	if !valid.HasErrors() {
-		code = e.SUCCESS
+		code = e.ERROR_DATABASE_EXCEPTION
+		if ok {
+			data["lists"], ok = models.GetArticles(util.GetPage(c), setting.PageSize, maps)
 
-		data["lists"] = models.GetArticles(util.GetPage(c), setting.PageSize, maps)
-		data["total"] = models.GetTotalAritical(maps)
+		}
+		if ok{
+			data["total"],ok = models.GetTotalAritical(maps)
+			code = e.SUCCESS
+		}
+
 
 	} else {
 		for _, err := range valid.Errors {
@@ -85,6 +98,8 @@ func GetArticles(c *gin.Context) {
 }
 
 //新增文章
+
+
 func AddArticle(c *gin.Context) {
 	tagId := com.StrTo(c.Query("tag_id")).MustInt()
 	title := c.Query("title")
@@ -112,8 +127,12 @@ func AddArticle(c *gin.Context) {
 			data["created_by"] = createdBy
 			data["state"] = state
 
-			models.AddArticle(data)
-			code = e.SUCCESS
+			if models.AddArticle(data){
+				code = e.SUCCESS
+			}else {
+				code = e.ERROR_DATABASE_EXCEPTION
+			}
+
 		} else {
 			code = e.ERROR_NOT_EXIST_TAG
 		}
@@ -131,6 +150,8 @@ func AddArticle(c *gin.Context) {
 }
 
 //修改文章
+
+
 func EditArticle(c *gin.Context) {
 	valid := validation.Validation{}
 
@@ -174,8 +195,11 @@ func EditArticle(c *gin.Context) {
 
 				data["modified_by"] = modifiedBy
 
-				models.EditArticle(id, data)
-				code = e.SUCCESS
+				if models.EditArticle(id, data) {
+					code = e.SUCCESS
+				}else {
+					code = e.ERROR_DATABASE_EXCEPTION
+				}
 			} else {
 				code = e.ERROR_NOT_EXIST_TAG
 			}
@@ -196,6 +220,8 @@ func EditArticle(c *gin.Context) {
 }
 
 //删除文章
+
+
 func DeleteArticle(c *gin.Context) {
 	id := com.StrTo(c.Param("id")).MustInt()
 
@@ -205,8 +231,10 @@ func DeleteArticle(c *gin.Context) {
 	code := e.INVALID_PARAMS
 	if !valid.HasErrors() {
 		if models.ExistArticleByID(id) {
-			models.DeleteArticle(id)
-			code = e.SUCCESS
+			code = e.ERROR_DATABASE_EXCEPTION
+			if models.DeleteArticle(id) {
+				code = e.SUCCESS
+			}
 		} else {
 			code = e.ERROR_NOT_EXIST_ARTICLE
 		}
