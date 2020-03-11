@@ -29,7 +29,7 @@ const (
 	FATAL
 )
 
-func init() {
+func Setup() {
 	filePath := getLogFileFullPath()
 	F = openLogFile(filePath)
 	//log.New：创建一个新的日志记录器。out定义要写入日志数据的IO句柄。

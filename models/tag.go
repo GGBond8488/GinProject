@@ -66,6 +66,11 @@ func EditTag(id int, data interface {}) bool {
 	return true
 }
 
+func DeleteAllTag()bool{
+	db.Unscoped().Where("delete_on != ?",0).Delete(&Tag{})
+	return true
+}
+
 //这属于gorm的Callbacks，可以将回调方法定义为模型结构的指针，在创建、更新、查询、删除时将被调用，如果任何回调返回错误，gorm将停止未来操作并回滚所有更改。
 //
 //gorm所支持的回调方法：

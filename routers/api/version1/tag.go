@@ -37,7 +37,7 @@ func GetTags(c *gin.Context)  {
 	}
 
 	code := e.ERROR_DATABASE_EXCEPTION
-	data["lists"],ok1 = models.GetTags(util.GetPage(c),setting.PageSize,maps)
+	data["lists"],ok1 = models.GetTags(util.GetPage(c),setting.AppSetting.PageSize,maps)
 	data["total"],ok2 = models.GetTagTotal(maps)
 	if ok1&&ok2{
 		code = e.SUCCESS

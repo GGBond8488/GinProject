@@ -35,7 +35,7 @@ func GetArticle(c *gin.Context) {
 		}
 	} else {
 		for _, err := range valid.Errors {
-			logging.Info(err.Key, err.Message)
+			logging.Info(err.Key+"  "+err.Message)
 		}
 	}
 
@@ -75,7 +75,7 @@ func GetArticles(c *gin.Context) {
 	if !valid.HasErrors() {
 		code = e.ERROR_DATABASE_EXCEPTION
 		if ok {
-			data["lists"], ok = models.GetArticles(util.GetPage(c), setting.PageSize, maps)
+			data["lists"], ok = models.GetArticles(util.GetPage(c), setting.AppSetting.PageSize, maps)
 
 		}
 		if ok{
@@ -86,7 +86,7 @@ func GetArticles(c *gin.Context) {
 
 	} else {
 		for _, err := range valid.Errors {
-			logging.Info(err.Key, err.Message)
+			logging.Info(err.Key+"  "+err.Message)
 		}
 	}
 
@@ -138,7 +138,7 @@ func AddArticle(c *gin.Context) {
 		}
 	} else {
 		for _, err := range valid.Errors {
-			logging.Info(err.Key, err.Message)
+			logging.Info(err.Key+"  "+err.Message)
 		}
 	}
 
@@ -208,7 +208,7 @@ func EditArticle(c *gin.Context) {
 		}
 	} else {
 		for _, err := range valid.Errors {
-			logging.Info(err.Key, err.Message)
+			logging.Info(err.Key+"  "+err.Message)
 		}
 	}
 

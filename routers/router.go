@@ -29,7 +29,7 @@ func InitRouter() *gin.Engine {
 	//Recover返回从panic中回复的中间件，并写入500
 	r.Use(gin.Recovery())
 
-	gin.SetMode(setting.RunMode)
+	gin.SetMode(setting.ServerSetting.RunMode)
 
 	r.GET("/auth", api.GetAuth)
 	r.GET("/swagger/*any",ginSwagger.WrapHandler(swaggerFiles.Handler))

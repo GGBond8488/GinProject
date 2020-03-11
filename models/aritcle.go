@@ -75,6 +75,10 @@ func AddArticle(data map[string]interface {}) bool {
 	return true
 }
 
+func DeleteAllAriticle() bool {
+	db.Unscoped().Where("delete_on != ?",0).Delete(&Tag{})
+	return true
+}
 
 
 //func (article *Article) BeforeCreate(scope *gorm.Scope) error {

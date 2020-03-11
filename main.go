@@ -1,6 +1,8 @@
 package main
 
 import (
+	"My-gin-Project/models"
+	"My-gin-Project/pkg/logging"
 	"My-gin-Project/pkg/setting"
 	"My-gin-Project/routers"
 	"context"
@@ -12,14 +14,20 @@ import (
 	"time"
 )
 
+func init()  {
+	setting.Setup()
+	models.Setup()
+	logging.Setup()
+}
+
 func main() {
 	router := routers.InitRouter()
 
 	s := &http.Server{
-		Addr:           fmt.Sprintf(":%d", setting.HTTPPort),
+		Addr:           fmt.Sprintf(":%d", setting.ServerSetting.HttpPort),
 		Handler:        router,
-		ReadTimeout:    setting.ReadTimeout,
-		WriteTimeout:   setting.WriteTimeout,
+		ReadTimeout:    setting.ServerSetting.ReadTimeout,
+		WriteTimeout:   setting.ServerSetting.WriteTimeout,
 		MaxHeaderBytes: 1 << 20,
 	}
 
