@@ -9,12 +9,13 @@ type Article struct {
 	//能够达到Article、Tag关联查询的功能
 	Tag   Tag `json:"tag"`
 
-	Title string `json:"title"`
-	Desc string `json:"desc"`
-	Content string `json:"content"`
-	CreatedBy string `json:"created_by"`
-	ModifiedBy string `json:"modified_by"`
-	State int `json:"state"`
+	Title         string `json:"title"`
+	Desc          string `json:"desc"`
+	Content       string `json:"content"`
+	CreatedBy     string `json:"created_by"`
+	ModifiedBy    string `json:"modified_by"`
+	State         int    `json:"state"`
+	CoverImageUrl string `json:"cover_image_url"`
 }
 
 func ExistArticleByID(id int)bool  {
@@ -70,6 +71,7 @@ func AddArticle(data map[string]interface {}) bool {
 		Content : data["content"].(string),
 		CreatedBy : data["created_by"].(string),
 		State : data["state"].(int),
+		CoverImageUrl:data["cover_image_url"].(string),
 	})
 
 	return true

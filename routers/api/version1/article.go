@@ -101,13 +101,50 @@ func GetArticles(c *gin.Context) {
 
 
 func AddArticle(c *gin.Context) {
+	data := make(map[string]interface{})
+	code := e.SUCCESS
 	tagId := com.StrTo(c.Query("tag_id")).MustInt()
 	title := c.Query("title")
 	desc := c.Query("desc")
 	content := c.Query("content")
 	createdBy := c.Query("created_by")
 	state := com.StrTo(c.DefaultQuery("state", "0")).MustInt()
-
+	image := c.Query("image")
+	//file,image,err := c.Request.FormFile("image")
+	//if err != nil {
+	//	logging.Warn(err)
+	//	code := e.ERROR
+	//	c.JSON(http.StatusOK,gin.H{
+	//		"code":code,
+	//		"msg":e.GetMsg(code),
+	//		"data":data,
+	//	})
+	//}
+	//if image == nil {
+	//	code = e.INVALID_PARAMS
+	//}else {
+	//	imageName := upload.GetImageName(image.Filename)
+	//	fullPath := upload.GetImageFullPath()
+	//	savePath := upload.GetImagePath()
+	//
+	//	src := fullPath+imageName
+	//
+	//	if !upload.CheckImageExt(imageName)||!upload.CheckImageSize(file){
+	//		code = e.ERROR_UPLOAD_CHECK_IMAGE_FORMAT
+	//	}else {
+	//		err := upload.CheckImage(fullPath)
+	//		if err != nil {
+	//			logging.Warn(err)
+	//			code = e.ERROR_UPLOAD_CHECK_IMAGE_FAIL
+	//		}else if err := c.SaveUploadedFile(image,src);err != nil{
+	//			logging.Warn(err)
+	//			code = e.ERROR_UPLOAD_SAVE_IMAGE_FAIL
+	//		}else {
+	//			//data["image_url"] = upload.GetImageFullUrl(imageName)
+	//			data["image_save_url"] = savePath + imageName
+	//		}
+	//	}
+	//}
 	valid := validation.Validation{}
 	valid.Min(tagId, 1, "tag_id").Message("标签ID必须大于0")
 	valid.Required(title, "title").Message("标题不能为空")
@@ -115,18 +152,19 @@ func AddArticle(c *gin.Context) {
 	valid.Required(content, "content").Message("内容不能为空")
 	valid.Required(createdBy, "created_by").Message("创建人不能为空")
 	valid.Range(state, 0, 1, "state").Message("状态只允许0或1")
+	//valid.Required(image,"image").Message("cover_image_url不能为空")
+	valid.Max(len(image),1024,"image").Message("cover_image_url长度不能超过1024")
 
-	code := e.INVALID_PARAMS
+	code = e.INVALID_PARAMS
 	if !valid.HasErrors() {
 		if models.ExistTagByID(tagId) {
-			data := make(map[string]interface{})
 			data["tag_id"] = tagId
 			data["title"] = title
 			data["desc"] = desc
 			data["content"] = content
 			data["created_by"] = createdBy
 			data["state"] = state
-
+			data["cover_image_url"] = image
 			if models.AddArticle(data){
 				code = e.SUCCESS
 			}else {
@@ -161,6 +199,7 @@ func EditArticle(c *gin.Context) {
 	desc := c.Query("desc")
 	content := c.Query("content")
 	modifiedBy := c.Query("modified_by")
+	image := c.Query("image")
 
 	var state int = -1
 	if arg := c.Query("state"); arg != "" {
@@ -174,6 +213,7 @@ func EditArticle(c *gin.Context) {
 	valid.MaxSize(content, 65535, "content").Message("内容最长为65535字符")
 	valid.Required(modifiedBy, "modified_by").Message("修改人不能为空")
 	valid.MaxSize(modifiedBy, 100, "modified_by").Message("修改人最长为100字符")
+	valid.Max(len(image),1024,"image").Message("cover_image_url长度不能超过1024")
 
 	code := e.INVALID_PARAMS
 	if !valid.HasErrors() {
@@ -194,7 +234,7 @@ func EditArticle(c *gin.Context) {
 				}
 
 				data["modified_by"] = modifiedBy
-
+				data["cover_image_url"] = image
 				if models.EditArticle(id, data) {
 					code = e.SUCCESS
 				}else {

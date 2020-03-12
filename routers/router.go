@@ -4,11 +4,13 @@ import (
 	_ "My-gin-Project/docs"
 	"My-gin-Project/middleware/jwt"
 	"My-gin-Project/pkg/setting"
+	"My-gin-Project/pkg/upload"
 	"My-gin-Project/routers/api"
 	"My-gin-Project/routers/api/version1"
 	"github.com/gin-gonic/gin"
 	"github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
+	"net/http"
 )
 
 func InitRouter() *gin.Engine {
@@ -33,7 +35,8 @@ func InitRouter() *gin.Engine {
 
 	r.GET("/auth", api.GetAuth)
 	r.GET("/swagger/*any",ginSwagger.WrapHandler(swaggerFiles.Handler))
-
+	r.POST("/upload",api.UploadImage)
+	r.StaticFS("/upload/images",http.Dir(upload.GetImageFullPath()))
 	apiv1 := r.Group("/api/v1")
 	apiv1.Use(jwt.JWT())
 	{	// url /api/v1/tags
