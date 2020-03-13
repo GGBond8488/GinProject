@@ -1,5 +1,7 @@
 package models
 
+import "github.com/jinzhu/gorm"
+
 type Tag struct {
 	Model
 
@@ -9,66 +11,69 @@ type Tag struct {
 	State int `json:"state"`
 }
 
-func GetTags(pageNum int,pageSize int,maps interface{})(tags []Tag,ok bool)  {
-	db.Where(maps).Offset(pageNum).Limit(pageSize).Find(&tags)
-	ok = true
+func GetTags(pageNum int,pageSize int,maps interface{})(tags []Tag,err error)  {
+	err = db.Where(maps).Offset(pageNum).Limit(pageSize).Find(&tags).Error
+	if err!=nil&&err != gorm.ErrRecordNotFound {
+		return nil,err
+	}
 	return
 }
-func GetTagTotal(maps interface {}) (count int,ok bool){
-	//model指定您要运行数据库操作的模型
+func GetTagTotal(maps interface {}) (count int,err error){
+	//model指定要运行数据库操作的模型
 	// //将所有用户的名称更新为`hello'
 	// db.Model（＆User {}）.Update（“ name”，“ hello”）
 	// //如果用户的主键是非空白的，则将其用作条件，然后仅将用户名更新为`hello'
 	// db.Model（＆user）.Update（“ name”，“ hello”）
-	db.Model(&Tag{}).Where(maps).Count(&count)
-	ok = true
+	err = db.Model(&Tag{}).Where(maps).Count(&count).Error
 	return
 }
 
-func ExistTagByName(name string) bool {
+func ExistTagByName(name string) (exists bool,err error) {
 	var tag Tag
-	db.Select("id").Where("name = ? AND delete_on = ?", name,0).First(&tag)
+	err = db.Select("id").Where("name = ? AND delete_on = ?", name,0).First(&tag).Error
+	if err!=nil&&err != gorm.ErrRecordNotFound {
+		return false,err
+	}
 	if tag.ID > 0 {
-		return true
+		return true,nil
 	}
 
-	return false
+	return false,nil
 }
 
-func AddTag(name string, state int, createdBy string) bool{
-	db.Create(&Tag {
+func AddTag(name string, state int, createdBy string)error{
+	return db.Create(&Tag {
 		Name : name,
 		State : state,
 		CreatedBy : createdBy,
-	})
+	}).Error
 
-	return true
 }
-func ExistTagByID(id int) bool {
+func ExistTagByID(id int)(exists bool,err error) {
 	var tag Tag
 	db.Select("id").Where("id = ? AND delete_on = ?", id,0).First(&tag)
+	if err!=nil&&err != gorm.ErrRecordNotFound {
+		return false,err
+	}
 	if tag.ID > 0 {
-		return true
+		return true,nil
 	}
 
-	return false
+	return false,nil
 }
 
-func DeleteTag(id int) bool {
-	db.Where("id = ?", id).Delete(&Tag{})
+func DeleteTag(id int) error {
+	 return  db.Where("id = ?", id).Delete(&Tag{}).Error
 
-	return true
 }
 
-func EditTag(id int, data interface {}) bool {
-	db.Model(&Tag{}).Where("id = ?", id).Updates(data)
+func EditTag(id int, data interface {}) error {
+	return db.Model(&Tag{}).Where("id = ?", id).Updates(data).Error
 
-	return true
 }
 
-func DeleteAllTag()bool{
-	db.Unscoped().Where("delete_on != ?",0).Delete(&Tag{})
-	return true
+func DeleteAllTag()error{
+	return db.Unscoped().Where("delete_on != ?",0).Delete(&Tag{}).Error
 }
 
 //这属于gorm的Callbacks，可以将回调方法定义为模型结构的指针，在创建、更新、查询、删除时将被调用，如果任何回调返回错误，gorm将停止未来操作并回滚所有更改。

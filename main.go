@@ -2,6 +2,7 @@ package main
 
 import (
 	"My-gin-Project/models"
+	"My-gin-Project/pkg/gredis"
 	"My-gin-Project/pkg/logging"
 	"My-gin-Project/pkg/setting"
 	"My-gin-Project/routers"
@@ -15,6 +16,7 @@ import (
 )
 
 func init()  {
+	gredis.Setup()
 	setting.Setup()
 	models.Setup()
 	logging.Setup()
