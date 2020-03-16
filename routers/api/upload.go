@@ -11,7 +11,8 @@ import (
 func UploadImage(c *gin.Context){
 	code := e.SUCCESS
 	data := make(map[string]string)
-
+	//拿到文件
+	//func (r *Request) FormFile(key string) (multipart.File, *multipart.FileHeader, error)
 	file,image,err := c.Request.FormFile("image")
 	if err != nil {
 		logging.Warn(err)
@@ -38,6 +39,7 @@ func UploadImage(c *gin.Context){
 			if err != nil {
 				logging.Warn(err)
 				code = e.ERROR_UPLOAD_CHECK_IMAGE_FAIL
+				//存储文件到指定位置
 			}else if err := c.SaveUploadedFile(image,src);err != nil{
 				logging.Warn(err)
 				code = e.ERROR_UPLOAD_SAVE_IMAGE_FAIL
