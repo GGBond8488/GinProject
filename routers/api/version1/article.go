@@ -3,6 +3,7 @@ package version1
 import (
 	"My-gin-Project/pkg/app"
 	"My-gin-Project/pkg/e"
+	"My-gin-Project/pkg/logging"
 	"My-gin-Project/pkg/setting"
 	"My-gin-Project/pkg/util"
 	"My-gin-Project/service/article_service"
@@ -34,7 +35,7 @@ func GetArticle(c *gin.Context) {
 	articleService := article_service.Article{ID:id}
 	exists,err := articleService.ExistByID()
 	if err!=nil{
-		appG.Response(http.StatusOK,e.ERROR_CHECK_EXIST_ARTICLE_FAIL,nil)
+		appG.Response(http.StatusInternalServerError,e.ERROR_CHECK_EXIST_ARTICLE_FAIL,nil)
 		return
 	}
 	if !exists{
@@ -44,6 +45,7 @@ func GetArticle(c *gin.Context) {
 	article ,err := articleService.Get()
 	if err != nil{
 		appG.Response(http.StatusInternalServerError,e.ERROR_GET_ARTICLE_FAIL,nil)
+		return
 	}
 	appG.Response(http.StatusOK,e.SUCCESS,article)
 
@@ -84,20 +86,18 @@ func GetArticles(c *gin.Context) {
 	appG := app.Gin{c}
 	valid := validation.Validation{}
 
-	var state int = -1
+	var state = -1
 	if arg := c.Query("state"); arg != "" {
 		state = com.StrTo(arg).MustInt()
 		valid.Range(state, 0, 1, "state").Message("状态只允许0或1")
 	}
-	var tagId int = -1
+	var tagId = -1
 	if arg := c.Query("tag_id"); arg != "" {
 		tagId = com.StrTo(arg).MustInt()
 		valid.Min(tagId, 1, "tag_id").Message("标签ID必须大于0")
 	}
-	var CreatedBys string
-	if CreatedBys := c.Query("created_by");CreatedBys!=""{
-		valid.MaxSize(CreatedBys,100,"created_by")
-	}
+	CreatedBys := c.Query("created_by")
+	valid.MaxSize(CreatedBys,100,"created_by")
 	if valid.HasErrors(){
 		app.MarkErrors(valid.Errors)
 		appG.Response(http.StatusBadRequest,e.INVALID_PARAMS,nil)
@@ -166,7 +166,7 @@ type AddArticleForm struct {
 	Desc          string `form:"desc" valid:"Required;MaxSize(255)"`
 	Content       string `form:"content" valid:"Required;MaxSize(65535)"`
 	CreatedBy     string `form:"created_by" valid:"Required;MaxSize(100)"`
-	CoverImageUrl string `form:"cover_image_url" valid:"Required;MaxSize(255)"`
+	CoverImageUrl string `form:"cover_image_url" valid:"MaxSize(255)"`
 	State         int    `form:"state" valid:"Range(0,1)"`
 }
 
@@ -174,6 +174,7 @@ func AddArticle(c *gin.Context) {
 	appG := app.Gin{c}
 	form := AddArticleForm{}
 	httpCode,errCode := app.BindAndValid(c,&form)
+	logging.Info(form)
 	if errCode != e.SUCCESS{
 		appG.Response(httpCode,errCode,nil)
 		return
@@ -292,12 +293,12 @@ func AddArticle(c *gin.Context) {
 
 type EditArticleForm struct {
 	ID            int    `form:"id" valid:"Required;Min(1)"`
-	TagID         int    `form:"tag_id" valid:"Required;Min(1)"`
-	Title         string `form:"title" valid:"Required;MaxSize(100)"`
-	Desc          string `form:"desc" valid:"Required;MaxSize(255)"`
-	Content       string `form:"content" valid:"Required;MaxSize(65535)"`
+	TagID         int    `form:"tag_id" valid:"Min(1)"`
+	Title         string `form:"title" valid:"MaxSize(100)"`
+	Desc          string `form:"desc" valid:"MaxSize(255)"`
+	Content       string `form:"content" valid:"MaxSize(65535)"`
 	ModifiedBy    string `form:"modified_by" valid:"Required;MaxSize(100)"`
-	CoverImageUrl string `form:"cover_image_url" valid:"Required;MaxSize(255)"`
+	CoverImageUrl string `form:"cover_image_url" valid:"MaxSize(255)"`
 	State         int    `form:"state" valid:"Range(0,1)"`
 }
 // @Summary Update article
@@ -311,7 +312,7 @@ type EditArticleForm struct {
 // @Param state body int false "State"
 // @Success 200 {object} app.Response
 // @Failure 500 {object} app.Response
-// @Router /api/v1/articles/{id} [put]
+// @Router /api/v1/articles/ [put]
 func EditArticle(c *gin.Context) {
 	appG := app.Gin{c}
 	form := EditArticleForm{}
@@ -328,7 +329,9 @@ func EditArticle(c *gin.Context) {
 		Content:       form.Content,
 		CoverImageUrl: form.CoverImageUrl,
 		State:         form.State,
+		ModifiedBy:    form.ModifiedBy,
 	}
+
 	exists,err:= articleService.ExistByID()
 	if err != nil{
 		appG.Response(http.StatusInternalServerError,e.ERROR_CHECK_EXIST_ARTICLE_FAIL,nil)

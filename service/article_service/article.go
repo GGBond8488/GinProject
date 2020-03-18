@@ -27,7 +27,10 @@ func (article *Article)ExistByID()(bool,error)  {
 	return models.ExistArticleByID(article.ID)
 }
 
-func (article *Article)GetAll()(res []*models.Article,err error)  {
+func (article *Article)GetAll()( []*models.Article, error)  {
+	var (
+		res, cacheRes []*models.Article
+	)
 	cache := cache_service.Article{
 		TagID:    article.TagID,
 		State:    article.State,
@@ -40,11 +43,11 @@ func (article *Article)GetAll()(res []*models.Article,err error)  {
 		if err != nil{
 			logging.Info(err)
 		}else {
-			json.Unmarshal(data,&res)
-			return res,nil
+			json.Unmarshal(data,&cacheRes)
+			return cacheRes,nil
 		}
 	}
-	res,err = models.GetArticles(article.PageNum,article.PageSize,article.getMaps())
+	res,err := models.GetArticles(article.PageNum,article.PageSize,article.getMaps())
 	if err!=nil{
 		return nil,err
 	}
@@ -53,24 +56,26 @@ func (article *Article)GetAll()(res []*models.Article,err error)  {
 }
 
 
-func (article *Article)Get()(res *models.Article,err error)  {
+func (article *Article)Get()(*models.Article, error)  {
+	var cacheRes *models.Article
 	cache := cache_service.Article{ID:article.ID}
 	key := cache.GetArticleKey()
 	if gredis.Exists(key){
 		data,err := gredis.Get(key)
 		if err != nil{
-			logging.Info(err)
+			logging.Error(err)
 		}else {
-			json.Unmarshal(data,&res)
-			return res,nil
+			json.Unmarshal(data,&cacheRes)
+			return cacheRes,nil
 		}
 	}
-	res,err = models.GetArticle(article.ID)
+	res,err := models.GetArticle(article.ID)
 	if err != nil{
+		logging.Error(err)
 		return nil,err
 	}
 	gredis.Set(key,res,3600)
-	return
+	return res,nil
 }
 
 func (article *Article)Add()error{
@@ -87,15 +92,17 @@ func (article *Article)Add()error{
 }
 
 func (article *Article)Edit()error  {
-	art := map[string]interface{}{
-		"tag_id":          article.TagID,
-		"title":           article.Title,
-		"desc":            article.Desc,
-		"content":         article.Content,
-		"modified_by":     article.ModifiedBy,
-		"cover_image_url": article.CoverImageUrl,
-		"state":           article.State,
+	art:=models.Article{
+		Model:         models.Model{ID:article.ID},
+		TagID:         article.TagID,
+		Title:         article.Title,
+		Desc:          article.Desc,
+		Content:       article.Content,
+		ModifiedBy:    article.ModifiedBy,
+		State:         article.State,
+		CoverImageUrl: article.CoverImageUrl,
 	}
+	//logging.Info(art)
 	return models.EditArticle(article.ID,art)
 }
 

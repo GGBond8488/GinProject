@@ -3,6 +3,7 @@ package version1
 import (
 	"My-gin-Project/pkg/app"
 	"My-gin-Project/pkg/e"
+	"My-gin-Project/pkg/logging"
 	"My-gin-Project/pkg/setting"
 	"My-gin-Project/pkg/util"
 	"My-gin-Project/service/tag_service"
@@ -28,21 +29,22 @@ func GetTags(c *gin.Context) {
 	//c.Query可用于获取?name=test&state=1这类URL参数，
 	//而c.DefaultQuery则支持设置一个默认值
 	appG := app.Gin{C: c}
-	valid := validation.Validation{}
+	//valid := validation.Validation{}
 
 	name := c.Query("name")
-	state := 1
-	if args := c.Query("sate"); args != "" {
+	state := -1
+	if args := c.Query("state"); args != "" {
 		state = com.StrTo(args).MustInt()
 	}
+	logging.Info(state)
 	//valid.Required(name,"name")
 	//valid.Range(state,0,1,"state")
 
-	if valid.HasErrors(){
-		app.MarkErrors(valid.Errors)
-		appG.Response(http.StatusBadRequest,e.INVALID_PARAMS,nil)
-		return
-	}
+	//if valid.HasErrors(){
+	//	app.MarkErrors(valid.Errors)
+	//	appG.Response(http.StatusBadRequest,e.INVALID_PARAMS,nil)
+	//	return
+	//}
 	tagService := tag_service.Tag{
 		Name:       name,
 		State:      state,
@@ -108,7 +110,7 @@ type AddTagForm struct {
 func AddTag(c *gin.Context) {
 	appG := app.Gin{c}
 	form := AddTagForm{}
-	httpCode,errCode := app.BindAndValid(c,form)
+	httpCode,errCode := app.BindAndValid(c,&form)
 	if errCode!=e.SUCCESS{
 		appG.Response(httpCode,errCode,nil)
 	}
@@ -182,7 +184,7 @@ type EditTagFrom struct {
 func EditTag(c *gin.Context) {
 	appG := app.Gin{c}
 	form := EditTagFrom{}
-	httpCode,errCode := app.BindAndValid(c,form)
+	httpCode,errCode := app.BindAndValid(c,&form)
 	if errCode!=e.SUCCESS{
 		appG.Response(httpCode,errCode,nil)
 	}
