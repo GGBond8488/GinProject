@@ -1,7 +1,7 @@
 一个基于gin+gorm+beego/validation+redis搭建的简单blog-web后端，使用jwt来做身份验证,藉此了解学习gin框架。
 计划作为个人博客后端。
 
-简单的使用ab压测能有1000左右的QPS(在自己的渣机上)比起java SpringBoot+Mybatis快了一倍以上。（同等数据量，同等测试参数（1000次请求100同时））（数据库redis均在远程阿里云服务器）在达到5000时，自己的学生机上的mysql和redis承受不住了。。（到mysql和redis压力顶点看日志的话差不多每一个查询花费70ms-80ms）
+简单的使用ab压测能有100左右的QPS(在自己的渣机上)比起java SpringBoot+Mybatis快了一倍以上。（同等数据量，同等测试参数（1000次请求100同时））（数据库redis均在远程阿里云服务器）在达到5000时，自己的学生机上的mysql和redis承受不住了。。（到mysql和redis压力顶点看日志的话差不多每一个查询花费70ms-80ms）
 
 ```
 Server Software:
